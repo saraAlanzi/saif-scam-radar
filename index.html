@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Saif Scam Radar</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=IBM+Plex+Sans:wght@400;500&display=swap">
+<style>
+:root{--bg:#F2F5F7;--ink:#13232B;--mut:#5B6B73;--card:#fff;--line:#D5DEE3;--acc:#0B5FFF;--bad:#D9480F;--ok:#0A7B4F;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1A20;--ink:#E8EFF2;--mut:#93A5AE;--card:#15262E;--line:#26404B;--acc:#6EA0FF;--bad:#FF8A4C;--ok:#4CD08F}}
+:root[data-theme="dark"]{--bg:#0E1A20;--ink:#E8EFF2;--mut:#93A5AE;--card:#15262E;--line:#26404B;--acc:#6EA0FF;--bad:#FF8A4C;--ok:#4CD08F}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 "IBM Plex Sans",system-ui,sans-serif}
+main{max-width:860px;margin:0 auto;padding:28px 18px 60px}
+h1,h2{font-family:"Bricolage Grotesque","Arial Narrow",sans-serif;line-height:1.1;margin:0 0 12px}
+h1{font-size:clamp(2rem,7vw,3.4rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:1.6rem;font-weight:800;margin-top:52px}
+p{max-width:64ch;color:var(--mut);margin:0 0 14px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+textarea{width:100%;min-height:96px;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;resize:vertical}
+button{font:500 1rem "IBM Plex Sans",sans-serif;background:var(--acc);color:#fff;border:0;border-radius:8px;padding:10px 18px;cursor:pointer;margin-top:10px}
+:root[data-theme="dark"] button,@media(prefers-color-scheme:dark){button{color:#08121A}}
+button:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.res{margin-top:14px;display:none}
+.chip{display:inline-block;border:1px solid var(--line);border-radius:6px;padding:2px 8px;margin:2px 4px 2px 0;font-size:.9rem;word-break:break-all}
+.score{font:800 2rem "Bricolage Grotesque",sans-serif}
+.bar{height:12px;border-radius:6px;background:var(--line);overflow:hidden;margin:6px 0}
+.bar i{display:block;height:100%;background:var(--bad);transition:width .5s}
+ol.steps{padding-left:20px;max-width:64ch;color:var(--mut)}ol.steps li{margin-bottom:10px}ol.steps b{color:var(--ink)}
+input[type=range]{width:100%}
+.row{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.big{font:800 2.2rem "Bricolage Grotesque",sans-serif}
+.svgw{overflow-x:auto}
+small{color:var(--mut)}
+@media(prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+<main>
+<h1>Scammers reuse the same accounts. We connect the reports.</h1>
+<p>Saif Scam Radar collects scam reports, pulls out the links, phone numbers and bank accounts, and links reports that share them. One shared bank account means one campaign, and one campaign means one block request.</p>
+
+<div class="box">
+<b>Try it: check a message</b>
+<textarea id="msg">URGENT: Your bank account is suspended. Verify now at http://secure-bank-login.xyz/verify or pay a 25 USD release fee to IBAN SA0380000000608010167519. Call +966 50 123 4567.</textarea>
+<button id="go">Check message</button>
+<div class="res" id="res">
+<div class="score" id="sc"></div>
+<div class="bar"><i id="bar"></i></div>
+<div id="why"></div>
+<div id="ents" style="margin-top:8px"></div>
+<p id="camp" style="margin-top:10px"></p>
+</div>
+</div>
+
+<h2>How it works</h2>
+<ol class="steps">
+<li><b>Collect.</b> People send in suspicious messages. Thousands can arrive at once.</li>
+<li><b>Extract.</b> Every report is scanned for links, phone numbers and bank accounts.</li>
+<li><b>Connect.</b> Reports sharing an account or link are grouped into one campaign.</li>
+<li><b>Act.</b> The tool outputs a live blocklist and a summary for banks: the account, the victim count, the sample messages.</li>
+</ol>
+
+<h2>Why parallel processing matters</h2>
+<p>Each report can be checked on its own, so the work splits across cores. Reports that share an account go to the same worker, so no campaign is cut in half. Move the slider to see the effect on 500,000 reports.</p>
+<div class="box">
+<label for="w">Workers: <b id="wn">1</b></label>
+<input type="range" id="w" min="1" max="16" value="1">
+<div class="row"><div><div class="big" id="t"></div><small>estimated time</small></div><div><div class="big" id="sp"></div><small>speed-up</small></div></div>
+<div class="bar"><i id="tb" style="background:var(--acc)"></i></div>
+<small>Illustrative estimate for the concept, not a measured result. The real benchmark comes from the working version.</small>
+</div>
+
+<h2>What a campaign looks like</h2>
+<p>Each dot is one report. Orange lines show a shared bank account. Tap a campaign to see its size.</p>
+<div class="box svgw"><svg id="g" viewBox="0 0 600 260" width="100%" role="img" aria-label="Reports linked by shared bank accounts"></svg>
+<p id="gi" style="margin:8px 0 0">Tap a campaign.</p></div>
+
+<p style="margin-top:40px"><small>All data on this page is synthetic. No real victim or account information is used.</small></p>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const known={"SA0380000000608010167519":312};
+$("go").onclick=()=>{
+ const t=$("msg").value;
+ const urls=t.match(/https?:\/\/[^\s]+/gi)||[];
+ const ibans=t.match(/\b[A-Z]{2}\d{2}[A-Z0-9]{10,26}\b/g)||[];
+ const phones=t.match(/\+\d[\d\s]{8,14}\d/g)||[];
+ const kw=["urgent","suspended","verify","fee","pay","immediately","blocked","prize","click"];
+ const hits=kw.filter(k=>t.toLowerCase().includes(k));
+ let s=hits.length*10;
+ const why=hits.map(h=>"Pressure or payment word: \""+h+"\"");
+ if(urls.some(u=>/\.(xyz|top|click|icu)\b/i.test(u))){s+=25;why.push("Link uses a domain ending common in scams")}
+ if(urls.some(u=>/login|verify|secure/i.test(u))){s+=15;why.push("Link asks you to log in or verify")}
+ if(ibans.length){s+=20;why.push("Asks for a payment to a bank account")}
+ s=Math.min(100,s);
+ $("res").style.display="block";
+ $("sc").textContent="Risk "+s+"/100";
+ $("sc").style.color=s>60?"var(--bad)":"var(--ok)";
+ $("bar").style.width=s+"%";
+ $("why").innerHTML=why.length?why.map(w=>"<div>• "+w+"</div>").join(""):"No warning signs found.";
+ $("ents").innerHTML=[...urls,...ibans,...phones].map(e=>"<span class='chip'></span>").join("")||"";
+ [...$("ents").children].forEach((c,i)=>c.textContent=[...urls,...ibans,...phones][i]);
+ const m=ibans.find(i=>known[i]);
+ $("camp").textContent=m?"This account appears in "+known[m]+" other reports (Campaign A). Block request ready.":"No matching campaign yet. This report is added to the network.";
+};
+function upd(){
+ const w=+$("w").value,base=240,t=base/w+(w>1?2*Math.log2(w):0);
+ $("wn").textContent=w;$("t").textContent=t.toFixed(0)+" s";
+ $("sp").textContent=(base/t).toFixed(1)+"x";
+ $("tb").style.width=Math.min(100,t/base*100)+"%";
+}
+$("w").oninput=upd;upd();
+// campaign graph
+const camps=[{n:"Campaign A",c:312,x:130,y:120,k:9},{n:"Campaign B",c:87,x:330,y:70,k:6},{n:"Campaign C",c:41,x:480,y:170,k:5}];
+let h="";const NS="http://www.w3.org/2000/svg";
+camps.forEach((c,ci)=>{
+ h+="<g class='cg' data-i='"+ci+"' style='cursor:pointer' tabindex='0'>";
+ for(let i=0;i<c.k;i++){
+  const a=i/c.k*6.283+ci,r=42+(i%3)*8,x=c.x+Math.cos(a)*r,y=c.y+Math.sin(a)*r;
+  h+="<line x1='"+c.x+"' y1='"+c.y+"' x2='"+x.toFixed(1)+"' y2='"+y.toFixed(1)+"' stroke='var(--bad)' stroke-width='1.5'/>";
+  h+="<circle cx='"+x.toFixed(1)+"' cy='"+y.toFixed(1)+"' r='6' fill='var(--acc)'/>";
+ }
+ h+="<circle cx='"+c.x+"' cy='"+c.y+"' r='11' fill='var(--bad)'/></g>";
+});
+[[40,30],[70,220],[240,215],[400,225],[560,40],[250,30],[560,225],[30,140]].forEach(p=>{h+="<circle cx='"+p[0]+"' cy='"+p[1]+"' r='5' fill='var(--line)'/>"});
+$("g").innerHTML=h;
+document.querySelectorAll(".cg").forEach(g=>{
+ const f=()=>{const c=camps[g.dataset.i];$("gi").textContent=c.n+": "+c.c+" reports share one bank account. Suggested action: send account to bank for review."};
+ g.onclick=f;g.onkeydown=e=>{if(e.key==="Enter")f()};
+});
+</script>
+</body>
+</html>
